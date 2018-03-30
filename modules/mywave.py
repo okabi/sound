@@ -1,5 +1,6 @@
 import wave
 import pyaudio
+import struct
 import numpy as np
 import matplotlib.pyplot as plt
 from player import Player
@@ -13,6 +14,10 @@ class WaveReader:
             path -- WAVE のパス。
         """
         self.__wf = wave.open(path, mode='rb')
+
+
+    def __del__(self):
+        self.__wf.close()
 
 
     def printWaveInfo(self):
@@ -47,3 +52,46 @@ class WaveReader:
         # 波形表示（一部）
         plt.plot(data[:1000])
         plt.show()
+
+
+class WaveWriter:
+    """ WAVE 書き込みに利用するクラス。 """
+    def __init__(self, path):
+        """ WAVE ファイルの書き込み準備を行います。
+        Parameters:
+            path -- WAVE のパス。
+        """
+        self.__wf = wave.open(path, mode='wb')
+        self.setWaveInfo()
+
+
+    def __del__(self):
+        self.__wf.close()
+
+
+    def setWaveInfo(self, *, nchannels=1, sampwidth=2, rate=44100):
+        """ WAVE ファイルの情報を設定します。
+        Parameters:
+            nchannels -- チャンネル数（デフォルト: 1）。
+            sampwidth -- 量子化バイト数（デフォルト: 2）。
+            rate -- サンプリング周波数（デフォルト: 44100）。
+        """
+        self.__wf.setnchannels(nchannels)
+        self.__wf.setsampwidth(sampwidth)
+        self.__wf.setframerate(rate)
+
+
+    def save(self, wave):
+        """ WAVE ファイルを書き込みます。
+        Parameters:
+            wave -- [-1, 1]の数値リスト。
+        """
+        mx = 2 ** (self.__wf.getsampwidth() * 8) // 2 - 1
+        filt = np.vectorize(lambda x: min(mx, max(-mx, x)))
+        data = filt(mx * wave)
+
+        if self.__wf.getsampwidth() == 2:
+            data = data.astype(np.int16)
+            binary = struct.pack('h' * len(data), *data)
+
+        self.__wf.writeframes(binary)

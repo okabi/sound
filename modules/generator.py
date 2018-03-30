@@ -24,27 +24,73 @@ class Generator:
             return np.frombuffer(self.__data, dtype='int16')
 
 
-    def createSineWave(self, A, f0, length):
-        """ 正弦波を作成します。
-        Parameters:
-            A -- 振幅。
-            f0 -- 基本周波数。
-            length -- 長さ（秒）。
-        """
-        wave = A * np.sin(2 * np.pi * f0 * np.arange(self.fs * length) / self.fs)
-        self.__create_wave(wave)
-
-
     def addSineWave(self, A, f0, length, alpha=0):
-        """ 現在作成されている音声データに正弦波を加えます。
+        """ 正弦波を作成します。
         Parameters:
             A -- 振幅。
             f0 -- 基本周波数。
             length -- 長さ（秒）。
             alpha -- 位相。
         """
-        wave = A * np.sin(2 * np.pi * f0 * np.arange(self.fs * length) / self.fs + alpha)
-        self.__add_wave(wave)
+        wave = A * np.sin(2 * np.pi * f0 * np.arange(self.fs * length) / self.fs)
+        if self.__data is None:
+            self.__create_wave(wave)
+        else:
+            self.__add_wave(wave)
+
+
+    def addTriangleWave(self, A, f0, length, alpha=0):
+        """ 三角波を作成します。
+        Parameters:
+            A -- 振幅。
+            f0 -- 基本周波数。
+            length -- 長さ（秒）。
+            alpha -- 位相。
+        """
+        basewave = 2 * np.pi * f0 * np.arange(self.fs * length) / self.fs
+        wave = np.zeros(len(basewave))
+        for i in range(10):
+            wave += (-1)**i * (A / (2*i+1)**2) * np.sin((2*i+1) * basewave + alpha)
+        if self.__data is None:
+            self.__create_wave(wave)
+        else:
+            self.__add_wave(wave)
+
+
+    def addSquareWave(self, A, f0, length, alpha=0):
+        """ 矩形波を作成します（重い）。
+        Parameters:
+            A -- 振幅。
+            f0 -- 基本周波数。
+            length -- 長さ（秒）。
+            alpha -- 位相。
+        """
+        basewave = 2 * np.pi * f0 * np.arange(self.fs * length) / self.fs
+        wave = np.zeros(len(basewave))
+        for i in range(1000):
+            wave += A / (2*i+1) * np.sin((2*i+1) * basewave + alpha)
+        if self.__data is None:
+            self.__create_wave(wave)
+        else:
+            self.__add_wave(wave)
+
+
+    def addSawtoothWave(self, A, f0, length, alpha=0):
+        """ のこぎり波を作成します。
+        Parameters:
+            A -- 振幅。
+            f0 -- 基本周波数。
+            length -- 長さ（秒）。
+            alpha -- 位相。
+        """
+        basewave = 2 * np.pi * f0 * np.arange(self.fs * length) / self.fs
+        wave = np.zeros(len(basewave))
+        for i in range(100):
+            wave += A / (i+1) * np.sin((i+1) * basewave + alpha)
+        if self.__data is None:
+            self.__create_wave(wave)
+        else:
+            self.__add_wave(wave)
 
 
     def readframes(self, chunk):
