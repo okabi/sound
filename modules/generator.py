@@ -31,35 +31,20 @@ class Generator:
             f0 -- 基本周波数。
             length -- 長さ（秒）。
         """
-        # 正弦波の作成
         wave = A * np.sin(2 * np.pi * f0 * np.arange(self.fs * length) / self.fs)
-        mx = 2 ** self.nbit // 2 - 1
-        filt = np.vectorize(lambda x: min(mx, max(-mx, x)))
-        wave = filt(mx * wave)
-
-        # バイナリ列への変換
-        self.__set_data(wave)
+        self.__create_wave(wave)
 
 
-    def addSineWave(self, A, f0, alpha=0):
+    def addSineWave(self, A, f0, length, alpha=0):
         """ 現在作成されている音声データに正弦波を加えます。
         Parameters:
             A -- 振幅。
             f0 -- 基本周波数。
+            length -- 長さ（秒）。
             alpha -- 位相。
         """
-        # 既存データの数値列への変換
-        data = self.getData()
-
-        # 正弦波を加算
-        l = len(data) / self.fs
-        wave = A * np.sin(2 * np.pi * f0 * np.arange(self.fs * l) / self.fs + alpha)
-        mx = 2 ** self.nbit // 2 - 1
-        filt = np.vectorize(lambda x: min(mx, max(-mx, x)))
-        wave = filt(data + mx * wave)
-
-        # バイナリ列への変換
-        self.__set_data(wave)
+        wave = A * np.sin(2 * np.pi * f0 * np.arange(self.fs * length) / self.fs + alpha)
+        self.__add_wave(wave)
 
 
     def readframes(self, chunk):
@@ -83,3 +68,27 @@ class Generator:
             wave = wave.astype(np.int16)
             self.__data = struct.pack('h' * len(wave), *wave)
             self.__pos = 0
+
+
+    def __create_wave(self, wave):
+        """ [-1, 1]の音声データを元にしてバイナリ列を保持します。
+        Parameters:
+            wave -- [-1, 1]の数値リスト。
+        """
+        mx = 2 ** self.nbit // 2 - 1
+        filt = np.vectorize(lambda x: min(mx, max(-mx, x)))
+        wave = filt(mx * wave)
+        self.__set_data(wave)
+
+
+    def __add_wave(self, wave):
+        """ [-1, 1]の音声データを、現在保持しているデータに加えます。
+        Parameters:
+            wave -- [-1, 1]の数値リスト。
+        """
+        data = self.getData()
+        l = len(data) / self.fs
+        mx = 2 ** self.nbit // 2 - 1
+        filt = np.vectorize(lambda x: min(mx, max(-mx, x)))
+        wave = filt(data + mx * wave[:len(data)])
+        self.__set_data(wave)

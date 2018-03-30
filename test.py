@@ -19,8 +19,8 @@ def createSineWaveChord(showFigure=False):
     fs = 44100
     generator = Generator(fs)
     generator.createSineWave(0.3, 262, 3)
-    generator.addSineWave(0.3, 330)
-    generator.addSineWave(0.3, 392)
+    generator.addSineWave(0.3, 330, 3)
+    generator.addSineWave(0.3, 392, 3)
     data = generator.getData()
 
     if showFigure:
@@ -34,5 +34,5 @@ def createSineWaveChord(showFigure=False):
 
 
 if __name__ == '__main__':
-    waveRead()
+    # waveRead()
     createSineWaveChord()
